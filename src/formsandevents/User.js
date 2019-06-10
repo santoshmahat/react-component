@@ -11,7 +11,8 @@ class User extends Component {
       email: '',
       address: '',
       image: '',
-      users: []
+      users: [],
+      error: ""
     }
   }
 
@@ -20,7 +21,7 @@ class User extends Component {
     if (event.target.name === "image") {
       console.log("files", event.target.files)
       this.setState({
-        image:event.target.files && event.target.files[0] && URL.createObjectURL(event.target.files[0]) || ""
+        image: event.target.files && event.target.files[0] && URL.createObjectURL(event.target.files[0]) || ""
       })
     } else {
       this.state.firstName = event.target.value;
@@ -33,7 +34,10 @@ class User extends Component {
 
   }
 
-  handleButtonClick = () => {
+  handleSubmitForm = () => {
+    this.setState({
+      error:""
+    })
     const { firstName, lastName, email, address, image, users } = this.state;
     const user = {
       firstName,
@@ -42,9 +46,29 @@ class User extends Component {
       address,
       image
     }
+
+    for (let key in user) {
+      if (!user[key]) {
+        this.setState({
+          error: "All fields are required"
+        })
+        return;
+      }
+    }
     users.push(user);
     this.setState({
       users: users
+    })
+  }
+
+  deleteUser = (email) => {
+    const index = this.state.users.findIndex((user) => {
+      return user.email === email
+    });
+    const newUsers = this.state.users.slice();
+    newUsers.splice(index, 1)
+    this.setState({
+      users: newUsers
     })
   }
 
@@ -87,31 +111,59 @@ class User extends Component {
               </div>
             </div>
           </div>
+          {this.state.error && (
+            <div className="row">
+              <div className="col-6">
+                <p className="alert alert-danger">{this.state.error}</p>
+              </div>
+            </div>
+          )}
           <div className="row">
             <div className="col-12">
               <div className="form-group">
-                <button onClick={this.handleButtonClick} type="button" className="btn btn-primary" id="btnSave">Save</button>
+                <button onClick={this.handleSubmitForm} type="button" className="btn btn-primary" id="btnSave">Save</button>
               </div>
             </div>
           </div>
         </form>
 
-        <ul>
-          {
-            users.map((user, index) => {
-              return (
-              
-                  <li key={index}>
-                  {user.firstName} {user.lastName}
-                  <img src={user.image}/>
-                  </li>
-              
-              )
-            })
-          }
-        </ul>
 
-      </div>
+        {users.length > 0 && (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Address</th>
+                <th>Image</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            {
+              users.map((user, index) => {
+                return (
+                  <tbody>
+                    <tr>
+                      <td>{user.firstName}</td>
+                      <td>{user.lastName}</td>
+                      <td>{user.email}</td>
+                      <td>{user.address}</td>
+                      <td>
+                        <img src={user.image} style={{ height: "40px", width: "40px" }} />
+                      </td>
+                      <td>
+                        <button className="btn btn-danger" onClick={() => this.deleteUser(user.email)}>Delete</button>
+                        <button className="btn btn-primary">Detail</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                )
+              })
+            }
+          </table>
+        )}
+      </div >
     )
   }
 }
